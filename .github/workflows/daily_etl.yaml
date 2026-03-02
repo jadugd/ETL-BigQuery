@@ -1,0 +1,27 @@
+name: Daily Crypto ETL
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Jalan setiap jam 12 malam
+  workflow_dispatch: # Memungkinkan kita menjalankan manual untuk testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas google-cloud-bigquery pyarrow requests google-auth
+
+      - name: Run ETL Script
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }} # Kita akan setting ini di GitHub Settings
+        run: python scripts/etl.py

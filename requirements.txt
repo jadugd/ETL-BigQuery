@@ -1,3 +1,6 @@
 pandas
+pyarrow
 requests
 google-cloud-core
+google-cloud-bigquery
+python-dotenv

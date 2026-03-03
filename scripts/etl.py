@@ -1,8 +1,8 @@
 from google.cloud import bigquery
 from google.oauth2 import service_account
+from dotenv import load_dotenv
 import pandas as pd
 import requests
-import json
 import os
 
 def fetch_crypto_data():
@@ -22,16 +22,18 @@ def fetch_crypto_data():
     return pd.DataFrame(rows)
 
 def load_to_bigquery(df):
-    # Mengambil kredensial dari Environment Variable (untuk keamanan di GitHub)
-    info = json.loads(os.environ['GCP_SA_KEY'])
-    credentials = service_account.Credentials.from_service_account_info(info)
     
-    client = bigquery.Client(credentials=credentials, project=info['project_id'])
-    table_id = f"{info['project_id']}.crypto_data.daily_prices"
+    client = bigquery.Client()
+    table_id = "bigquery-pipeline-489008.crypto_data.daily_prices"
 
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_APPEND", # Menambah data baru di bawahnya
-        autodetect=True,
+        schema=[
+            bigquery.SchemaField("coin", "STRING"),
+            bigquery.SchemaField("price_usd", "FLOAT"),
+            bigquery.SchemaField("change_24h", "FLOAT"),
+            bigquery.SchemaField("timestamp", "TIMESTAMP"),
+        ]
     )
 
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
@@ -40,4 +42,4 @@ def load_to_bigquery(df):
 
 if __name__ == "__main__":
     df = fetch_crypto_data()
-    print(df)
+    load_to_bigquery(df)
